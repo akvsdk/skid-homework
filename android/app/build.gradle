@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.skid.homework"
+    namespace "org.cubewhy.skidhw"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.skid.homework"
+        applicationId "org.cubewhy.skidhw"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,4 +1,4 @@
-package com.skid.homework;
+package org.cubewhy.skidhw;
 
 import com.getcapacitor.BridgeActivity;
 

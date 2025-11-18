@@ -1,7 +1,7 @@
 import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.skid.homework",
+  appId: "org.cubewhy.skidhw",
   appName: "Skid Homework",
   webDir: "dist",
   server: {
