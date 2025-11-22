@@ -37,6 +37,8 @@ export default function AddAISourceDialog({
 
   const [newProvider, setNewProvider] = useState<AiProvider>("gemini");
   const [newSourceName, setNewSourceName] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [apiAddress, setApiAddress] = useState("");
 
   const resetAddDialog = () => {
     setNewSourceName("");
@@ -64,16 +66,17 @@ export default function AddAISourceDialog({
     const newId = addSource({
       name,
       provider,
-      apiKey: null,
+      apiKey: apiKey ?? null,
       baseUrl:
-        provider === "gemini"
+        apiAddress ??
+        (provider === "gemini"
           ? DEFAULT_GEMINI_BASE_URL
-          : DEFAULT_OPENAI_BASE_URL,
+          : DEFAULT_OPENAI_BASE_URL),
       model:
         provider === "gemini" ? DEFAULT_GEMINI_MODEL : DEFAULT_OPENAI_MODEL,
       traits: undefined,
       thinkingBudget: provider === "gemini" ? 8192 : undefined,
-      enabled: false,
+      enabled: true,
       pollIntervalMs: provider === "openai" ? 1_000 : undefined,
       maxPollMs: provider === "openai" ? 30_000 : undefined,
     });
@@ -116,6 +119,31 @@ export default function AddAISourceDialog({
               value={newSourceName}
               onChange={(event) => setNewSourceName(event.target.value)}
               placeholder={t("sources.add.name-placeholder")}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="new-name">{t("sources.add.key")}</Label>
+            <Input
+              id="api-key"
+              value={apiKey}
+              onChange={(event) => setApiKey(event.target.value)}
+              placeholder={t("sources.add.key-placeholder")}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="new-name">{t("sources.add.address")}</Label>
+            <Input
+              id="api-address"
+              value={apiAddress}
+              type="url"
+              onChange={(event) => setApiAddress(event.target.value)}
+              placeholder={
+                newProvider === "gemini"
+                  ? DEFAULT_GEMINI_BASE_URL
+                  : DEFAULT_OPENAI_BASE_URL
+              }
             />
           </div>
         </div>
