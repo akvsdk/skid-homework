@@ -105,7 +105,7 @@ Gemini API Key 是免费的, 可以去申请
 
 如果是其他问题请携带Devtools (F12) 日志开issue.
 
-### ChatGLM/镜像站 用不起
+### ChatGLM 或者某些镜像站 用不起
 
 我们使用的OpenAI 轮子要求API 实现 `/v1/response` 接口
 
