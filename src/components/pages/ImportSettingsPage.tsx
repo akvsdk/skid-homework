@@ -16,15 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AiProvider, useAiStore } from "@/store/ai-store";
-
-export type ImportAIModelModel = {
-  name: string;
-  model: string;
-  provider: AiProvider;
-  baseUrl?: string;
-  key: string;
-};
+import { AiProvider, ImportAIModelModel, useAiStore } from "@/store/ai-store";
 
 export default function ImportSettingsPage() {
   const router = useRouter();
