@@ -23,7 +23,7 @@ export interface AiSource {
   enabled: boolean;
 }
 
-export type ImportAIModelModel = {
+export type ImportAISourceModel = {
   name: string;
   model: string;
   provider: AiProvider;

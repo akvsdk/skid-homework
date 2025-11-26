@@ -16,7 +16,24 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AiProvider, ImportAIModelModel, useAiStore } from "@/store/ai-store";
+import { AiProvider, ImportAISourceModel, useAiStore } from "@/store/ai-store";
+
+function resolveConfig(hash: string): ImportAISourceModel {
+  const payload = hash.substring(1);
+  let decodedString = decodeURIComponent(payload);
+  if (decodedString.startsWith("b64:")) {
+    decodedString = atob(decodedString.substring(4));
+  }
+
+  const parsedData = JSON.parse(decodedString);
+
+  // Basic validation checking if necessary fields exist
+  if (!parsedData.name || !parsedData.provider) {
+    throw new Error("Missing required fields (name or provider).");
+  }
+
+  return parsedData;
+}
 
 export default function ImportSettingsPage() {
   const router = useRouter();
@@ -25,7 +42,7 @@ export default function ImportSettingsPage() {
   });
 
   // State
-  const [modelJson, setModelJson] = useState<ImportAIModelModel | null>(null);
+  const [modelJson, setModelJson] = useState<ImportAISourceModel | null>(null);
   const [errorKey, setErrorKey] = useState<"error.parse-failed" | null>(null);
   const [isImported, setIsImported] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,17 +60,8 @@ export default function ImportSettingsPage() {
       return;
     }
 
-    // 2. Parse the JSON
     try {
-      const jsonString = hash.substring(1);
-      // Decode URI component in case the JSON was URL encoded
-      const decodedString = decodeURIComponent(jsonString);
-      const parsedData = JSON.parse(decodedString);
-
-      // Basic validation checking if necessary fields exist
-      if (!parsedData.name || !parsedData.provider) {
-        throw new Error("Missing required fields (name or provider).");
-      }
+      const parsedData = resolveConfig(hash);
 
       setModelJson(parsedData);
     } catch (err) {

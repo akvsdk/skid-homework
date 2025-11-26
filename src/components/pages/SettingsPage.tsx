@@ -7,7 +7,7 @@ import {
   type AiProvider,
   useAiStore,
   AiSource,
-  ImportAIModelModel,
+  ImportAISourceModel,
 } from "@/store/ai-store";
 import {
   useSettingsStore,
@@ -363,7 +363,7 @@ export default function SettingsPage() {
   };
 
   const handleShareSource = (source: AiSource) => {
-    const json: ImportAIModelModel = {
+    const json: ImportAISourceModel = {
       name: source.name,
       provider: source.provider,
       baseUrl: source.baseUrl,
@@ -372,8 +372,9 @@ export default function SettingsPage() {
     };
 
     // convert to url
-    const url = `${window.location.origin}/settings/import#${JSON.stringify(json)}`;
-    console.log(url);
+    const url = `${window.location.origin}/settings/import#b64:${btoa(JSON.stringify(json))}`;
+
+    // TODO: open share dialog
   };
 
   const qwenTooltipContent = (
