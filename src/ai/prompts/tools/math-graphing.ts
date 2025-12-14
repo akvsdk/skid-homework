@@ -1,4 +1,4 @@
-export const DIAGRAM_TOOL_PROMPT = String.raw`
+export const DIAGRAM_TOOL_PROMPT = `
 ## Interactive Diagram Tools
 
 You have access to specialized rendering tools for Math and Physics. When a user asks a question that requires visual explanation, use the specific code blocks below.
