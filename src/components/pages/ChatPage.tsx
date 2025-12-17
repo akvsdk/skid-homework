@@ -101,9 +101,8 @@ export default function ChatPage() {
   const setActiveSource = useAiStore((state) => state.setActiveSource);
   const getClientForSource = useAiStore((state) => state.getClientForSource);
 
+  // Chat Store: Removed activeChatId/setActiveChat from destructuring
   const threads = useChatStore((state) => state.threads);
-  const activeChatId = useChatStore((state) => state.activeChatId);
-  const setActiveChat = useChatStore((state) => state.setActiveChat);
   const isHydrated = useChatStore((state) => state.isHydrated);
   const loadThreads = useChatStore((state) => state.loadThreads);
   const loadMessages = useChatStore((state) => state.loadMessages);
@@ -112,6 +111,45 @@ export default function ChatPage() {
   const updateMessage = useChatStore((state) => state.updateMessage);
   const updateThread = useChatStore((state) => state.updateThread);
   const deleteChat = useChatStore((state) => state.deleteChat);
+  // Get all messages map directly
+  const messagesMap = useChatStore((state) => state.messages);
+
+  // --- Navigation & Active Chat Logic ---
+  const [activeChatId, setActiveChatId] = useState<string | undefined>(
+    undefined,
+  );
+
+  // Helper to sync state immediately AND update URL
+  const navigateToChat = useCallback(
+    (chatId: string | undefined) => {
+      setActiveChatId(chatId); // 1. Instant UI update
+      if (chatId) {
+        router.push(`#${chatId}`); // 2. URL update (async)
+      } else {
+        router.push("/chat");
+      }
+    },
+    [router],
+  );
+
+  // Sync from URL on mount and Back/Forward buttons
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      setActiveChatId(hash || undefined);
+    };
+
+    syncFromUrl(); // Run on mount
+
+    window.addEventListener("popstate", syncFromUrl);
+    // Optional: handle manual URL editing
+    window.addEventListener("hashchange", syncFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncFromUrl);
+      window.removeEventListener("hashchange", syncFromUrl);
+    };
+  }, []); // Empty dependency array ensures this setup runs once
 
   // --- Local State ---
   const [messageInput, setMessageInput] = useState("");
@@ -125,16 +163,13 @@ export default function ChatPage() {
   const [sourcePopoverOpen, setSourcePopoverOpen] = useState(false);
   const [modelInput, setModelInput] = useState("");
 
-  // Derived Data
-  const storeChatMessages = useChatStore((state) => {
-    const id = state.activeChatId;
-    return id ? state.messages[id] : undefined;
-  });
+  // --- Derived Data ---
 
-  const chatMessages = useMemo(
-    () => storeChatMessages ?? [],
-    [storeChatMessages],
-  );
+  // FIX: select messages based on local activeChatId, not store's activeChatId
+  const chatMessages = useMemo(() => {
+    if (!activeChatId) return [];
+    return messagesMap[activeChatId] ?? [];
+  }, [messagesMap, activeChatId]);
 
   const availableSources = useMemo(
     () => sources.filter((source) => source.enabled && Boolean(source.apiKey)),
@@ -159,10 +194,10 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!activeChatId) return;
-    const state = useChatStore.getState();
-    if (state.messages[activeChatId]) return;
+    // Check if messages are already loaded in the map
+    if (messagesMap[activeChatId]) return;
     loadMessages(activeChatId).catch(console.error);
-  }, [activeChatId, loadMessages]);
+  }, [activeChatId, loadMessages, messagesMap]);
 
   useEffect(() => {
     const seedParam = searchParams.get("seed");
@@ -217,10 +252,8 @@ export default function ChatPage() {
   // --- Textarea Autosize Logic ---
   useEffect(() => {
     if (textareaRef.current) {
-      // Reset height to auto to correctly calculate new scrollHeight
       textareaRef.current.style.height = "auto";
       const scrollHeight = textareaRef.current.scrollHeight;
-      // Clamp between 24px and 200px
       textareaRef.current.style.height = `${Math.min(Math.max(scrollHeight, 24), 200)}px`;
     }
   }, [messageInput]);
@@ -229,7 +262,6 @@ export default function ChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = useCallback((smooth = true) => {
-    // Shadcn ScrollArea renders a viewport with this data attribute
     const viewport = scrollAreaRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]",
     ) as HTMLElement;
@@ -242,7 +274,6 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    // Delay slightly to allow DOM to update
     const timeout = setTimeout(() => scrollToBottom(true), 100);
     return () => clearTimeout(timeout);
   }, [chatMessages, scrollToBottom]);
@@ -266,12 +297,12 @@ export default function ChatPage() {
   };
 
   const handleNewChat = useCallback(() => {
-    setActiveChat(undefined);
+    navigateToChat(undefined);
     setModelInput(resolvedSource?.model || "");
     setMessageInput("");
     setSeedData(null);
     if (window.innerWidth < 1024) setSidebarOpen(false);
-  }, [resolvedSource, setActiveChat]);
+  }, [resolvedSource, navigateToChat]);
 
   const handleSend = async () => {
     const trimmed = messageInput.trim();
@@ -288,9 +319,8 @@ export default function ChatPage() {
 
     const modelName = modelInput.trim() || resolvedSource.model;
     setIsSending(true);
-    setMessageInput(""); // Clear input immediately
+    setMessageInput("");
 
-    // Manual reset of height in case useEffect hasn't fired yet
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 
     let chatId = activeChatId ?? null;
@@ -312,13 +342,15 @@ export default function ChatPage() {
           initialMessages: [{ role: "user", content: trimmed }],
         });
         newlyCreated = true;
-        setActiveChat(chatId);
+
+        // Immediately update state and URL
+        navigateToChat(chatId);
+
         setSeedData(null);
       } else {
         await appendMessage(chatId, { role: "user", content: trimmed });
       }
 
-      // Scroll immediately after user message
       setTimeout(() => scrollToBottom(), 50);
 
       if (!newlyCreated && chatId) {
@@ -409,7 +441,8 @@ export default function ChatPage() {
           content: m.content,
         })),
       });
-      setActiveChat(newId);
+
+      navigateToChat(newId);
       toast.success(t("history.fork-success", { defaultValue: "Chat forked" }));
     } catch (e) {
       console.error(e);
@@ -426,7 +459,10 @@ export default function ChatPage() {
       return;
     try {
       await deleteChat(chatId);
-      if (activeChatId === chatId) handleNewChat();
+      // If we are deleting the current chat, go to new chat
+      if (activeChatId === chatId) {
+        navigateToChat(undefined);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Failed to delete");
@@ -459,7 +495,6 @@ export default function ChatPage() {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        {/* Native scroll for sidebar list usually behaves better than nested custom ScrollAreas */}
         <div className="h-full overflow-y-auto px-3">
           {threads.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center text-sm text-muted-foreground opacity-60">
@@ -477,7 +512,7 @@ export default function ChatPage() {
                   >
                     <button
                       onClick={() => {
-                        setActiveChat(thread.id);
+                        navigateToChat(thread.id);
                         if (mobile) setSidebarOpen(false);
                       }}
                       className={cn(
@@ -586,7 +621,6 @@ export default function ChatPage() {
           {/* HEADER */}
           <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-background/80 backdrop-blur-sm z-10">
             <div className="flex items-center gap-2">
-              {/* Mobile Trigger */}
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="md:hidden">
@@ -601,7 +635,6 @@ export default function ChatPage() {
                 </SheetContent>
               </Sheet>
 
-              {/* Desktop Expand */}
               {sidebarCollapsed && (
                 <>
                   <Tooltip>
@@ -712,9 +745,8 @@ export default function ChatPage() {
             </div>
           </header>
 
-          {/* CHAT AREA (Flex Column Container) */}
+          {/* CHAT AREA */}
           <div className="flex-1 min-h-0 overflow-hidden relative">
-            {/* ScrollArea set to h-full to take up the flex-1 space */}
             <ScrollArea ref={scrollAreaRef} className="h-full">
               <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 md:px-6 lg:px-8">
                 {chatMessages.length === 0 ? (
@@ -772,7 +804,6 @@ export default function ChatPage() {
                       >
                         <div className="prose prose-sm dark:prose-invert max-w-none wrap-break-word leading-normal">
                           <MemoizedMarkdown source={msg.content || "..."} />
-                          {/* TODO: wrap text */}
                         </div>
                       </div>
                     </motion.div>
@@ -782,7 +813,7 @@ export default function ChatPage() {
             </ScrollArea>
           </div>
 
-          {/* INPUT AREA (Fixed Footer) */}
+          {/* INPUT AREA */}
           <div className="shrink-0 bg-background px-4 pb-6 pt-2">
             <div className="mx-auto w-full max-w-3xl">
               <div className="relative flex items-end gap-2 rounded-2xl border bg-background px-4 py-3 shadow-lg ring-1 ring-border/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
