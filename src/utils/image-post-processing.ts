@@ -1,10 +1,5 @@
 /**
  * Processes an image using OpenCV.js to create a clean, high-contrast document.
- * Pipeline: Grayscale → Gaussian Blur → Adaptive Thresholding
- *
- * IMPORTANT:
- * - OpenCV.js must be loaded via <Script> and available as window.cv
- * - This function MUST run in the browser (Client Component)
  *
  * @param imageFile The original image file
  * @returns Promise with the processed File and Object URL
@@ -103,7 +98,7 @@ export const processImage = async (
                 return;
               }
 
-              const file = new File([blob], `ocr_${Date.now()}.png`, {
+              const file = new File([blob], `enhanced_${imageFile.name}.png`, {
                 type: "image/png",
               });
 
