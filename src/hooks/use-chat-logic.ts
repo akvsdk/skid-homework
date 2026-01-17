@@ -277,19 +277,19 @@ export function useChatLogic() {
           .map((msg) => ({ role: msg.role, content: msg.content })),
       );
 
-      const client = getClientForSource(resolvedSource.id);
-      if (!client?.sendChat) throw new Error(t("errors.unsupported"));
+      const aiClient = getClientForSource(resolvedSource.id);
+      if (!aiClient?.sendChat) throw new Error(t("errors.unsupported"));
 
       const traitsPrompt = resolvedSource.traits
         ? `\nUser traits:\n${resolvedSource.traits}\n`
         : "";
-      client.addSystemPrompt(chatPrompt);
-      client.addSystemPrompt(traitsPrompt);
+      aiClient.addSystemPrompt(chatPrompt);
+      aiClient.addSystemPrompt(traitsPrompt);
 
-      client.setAvailableTools(getEnabledToolCallingPrompts());
+      aiClient.setAvailableTools(getEnabledToolCallingPrompts());
 
       let aggregated = "";
-      await client.sendChat(
+      await aiClient.sendChat(
         [...contextMessages, ...history],
         modelName,
         (delta) => {

@@ -316,8 +316,8 @@ export default function ScanPage() {
 
         for (const source of availableSources) {
           try {
-            const ai = getClientForSource(source.id);
-            if (!ai) {
+            const aiClient = getClientForSource(source.id);
+            if (!aiClient) {
               throw new Error(
                 t("errors.missing-key", { provider: source.name }),
               );
@@ -339,15 +339,15 @@ ${traits}
 `
               : "";
 
-            ai.addSystemPrompt(solvePrompt);
-            ai.addSystemPrompt(promptPrompt + traitsPrompt);
+            aiClient.addSystemPrompt(solvePrompt);
+            aiClient.addSystemPrompt(promptPrompt + traitsPrompt);
 
-            ai.setAvailableTools(getEnabledToolCallingPrompts());
+            aiClient.setAvailableTools(getEnabledToolCallingPrompts());
 
             clearStreamedOutput(item.url);
 
             const resText = await retryAsyncOperation(() =>
-              ai.sendMedia(
+              aiClient.sendMedia(
                 base64,
                 item.mimeType,
                 undefined,

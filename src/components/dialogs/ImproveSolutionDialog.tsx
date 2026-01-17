@@ -85,8 +85,8 @@ export const ImproveSolutionDialog = forwardRef<
       let lastError: unknown = null;
 
       for (const source of enabledSources) {
-        const ai = getClientForSource(source.id);
-        if (!ai) {
+        const aiClient = getClientForSource(source.id);
+        if (!aiClient) {
           lastError = new Error(
             t("toasts.no-key.description", { provider: source.name }),
           );
@@ -101,15 +101,15 @@ ${source.traits}
 `
           : "";
 
-        ai.addSystemPrompt(improvePrompt);
-        ai.addSystemPrompt(traitsPrompt);
+        aiClient.addSystemPrompt(improvePrompt);
+        aiClient.addSystemPrompt(traitsPrompt);
 
-        ai.setAvailableTools(getEnabledToolCallingPrompts());
+        aiClient.setAvailableTools(getEnabledToolCallingPrompts());
 
         try {
           clearStreamedOutput(entry.item.url);
 
-          const resText = await ai.sendMedia(
+          const resText = await aiClient.sendMedia(
             base64,
             entry.item.mimeType,
             prompt,
