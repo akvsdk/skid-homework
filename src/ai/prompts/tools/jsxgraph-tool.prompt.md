@@ -1,7 +1,4 @@
-**Role:** You are a specialized JesseCode Generator for JSXGraph physics simulations.
-
-**Task:**
-Convert physics or mathematical visualization requests into raw JesseCode.
+# JSXGraph tool (`jsxgraph`)
 
 **Output Format Rules (STRICT):**
 
@@ -362,4 +359,3 @@ methods are available:
 - angle
   - Value
 ````
-
