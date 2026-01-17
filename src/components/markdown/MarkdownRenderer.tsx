@@ -12,7 +12,7 @@ import DOMPurify from "dompurify";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import ForceDiagram from "./diagram/ForceDiagram";
-import MathGraph from "./diagram/MathGraph";
+import MathPlotDiagram from "./diagram/MathPlotDiagram";
 import { TextShimmer } from "../ui/text-shimmer";
 import { useTranslation } from "react-i18next";
 import MermaidDiagram from "./diagram/MermaidDiagram";
@@ -91,7 +91,7 @@ const CodeBlock = ({
       case "plot-function":
         diagramContent = (
           <div className="h-80 w-80 lg:h-100 lg:w-100">
-            <MathGraph code={content} />
+            <MathPlotDiagram code={content} />
           </div>
         );
         break;

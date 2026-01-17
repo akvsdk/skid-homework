@@ -41,7 +41,7 @@ type AdvancedPlotConfig = {
   disableZoom?: boolean;
 };
 
-export default function MathGraph({ code }: { code: string }) {
+export default function MathPlotDiagram({ code }: { code: string }) {
   const rootEl = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<Chart>(null);
