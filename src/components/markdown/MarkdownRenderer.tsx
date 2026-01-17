@@ -8,6 +8,7 @@ import React, {
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import DOMPurify from "dompurify";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import ForceDiagram from "./diagram/ForceDiagram";
@@ -70,6 +71,8 @@ const CodeBlock = ({
     return endingFence === "```" || endingFence === "~~~";
   })();
 
+  let component: ReactNode;
+
   if (lang.startsWith("plot-")) {
     if (!isBlockComplete) {
       return (
@@ -79,7 +82,6 @@ const CodeBlock = ({
       );
     }
 
-    let component: ReactNode;
     let realLanguage = "json";
 
     if (lang === "plot-function") {
@@ -102,6 +104,23 @@ const CodeBlock = ({
     return (
       <DiagramRenderer language={realLanguage} content={content}>
         {component}
+      </DiagramRenderer>
+    );
+  } else if ((lang === "svg" || lang === "xml") && content.startsWith("<svg")) {
+    // svg image
+    if (!isBlockComplete) {
+      return (
+        <TextShimmer className="font-mono text-sm" duration={1}>
+          {t("generating-diagram")}
+        </TextShimmer>
+      );
+    }
+
+    const cleanSvg = DOMPurify.sanitize(content);
+
+    return (
+      <DiagramRenderer language={"xml"} content={content}>
+        <div dangerouslySetInnerHTML={{ __html: cleanSvg }} />
       </DiagramRenderer>
     );
   }
